@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hyper-Local Food Surplus Hub | High-Fidelity Prototype</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap"
+        rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                        },
+                        animal: {
+                            50: '#fff7ed',
+                            100: '#ffedd5',
+                            500: '#f97316',
+                            600: '#ea580c',
+                            700: '#c2410c',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Scrollbar and utility styles */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .pulse-ring {
+            animation: pulse-border 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse-border {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+
+            50% {
+                transform: scale(1.15);
+                opacity: 0;
+            }
+        }
+
+        .scanner-laser {
+            animation: scan 2.2s ease-in-out infinite alternate;
+        }
+
+        @keyframes scan {
+            0% {
+                top: 6%;
+            }
+
+            100% {
+                top: 90%;
+            }
+        }
+    </style>
+</head>
+
+<body
+    class="bg-slate-900 text-slate-800 font-sans antialiased min-h-screen flex flex-col selection:bg-emerald-500 selection:text-white">
+
+    <!-- ================= TOP APP NAVIGATION ================= -->
+    <header class="bg-slate-950/90 backdrop-blur-md border-b border-slate-800 text-white sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 sm:h-20">
+
+                <!-- Brand Logo & Details -->
+                <div class="flex items-center space-x-3">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
+                        <i class="fa-solid fa-seedling text-lg"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-base sm:text-lg tracking-tight text-white">FoodSurplus<span
+                                    class="text-emerald-400">Hub</span></span>
+                            <span
+                                class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Live
+                                Prototype</span>
+                        </div>
+                        <p class="text-xs text-slate-400 hidden sm:block">MIT AOE Civil S2 • AEIOU & UML Spec Engine</p>
+                    </div>
+                </div>
+
+                <!-- Global Simulation Status Badge -->
+                <div
+                    class="hidden md:flex items-center space-x-3 bg-slate-900/80 px-3.5 py-1.5 rounded-full border border-slate-800">
+                    <span class="relative flex h-2.5 w-2.5">
+                        <span
+                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                    </span>
+                    <span class="text-xs font-medium text-slate-300" id="global-status-text">Platform Live • Pune
+                        Central Grid</span>
+                </div>
+
+                <!-- Device Viewport Toggle (Desktop vs Mobile Preview frame) -->
+                <div class="flex items-center gap-2">
+                    <button onclick="toggleDeviceView()" id="deviceToggleBtn"
+                        class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition">
+                        <i class="fa-solid fa-mobile-screen"></i>
+                        <span class="hidden sm:inline" id="deviceToggleLabel">Mobile Frame</span>
+                    </button>
+                    <button onclick="resetDemoData()" title="Reset Simulator Data"
+                        class="px-2.5 py-1.5 rounded-lg text-xs bg-slate-800 hover:bg-rose-950 hover:text-rose-400 text-slate-400 border border-slate-700 transition">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- ROLE SWITCHER TABS (SRS Actors) -->
+            <div class="flex overflow-x-auto space-x-1 sm:space-x-2 py-2 border-t border-slate-800/80 no-scrollbar">
+                <button onclick="switchRole('donor')" id="tab-donor"
+                    class="role-tab flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition whitespace-nowrap bg-emerald-600 text-white shadow-md shadow-emerald-900/30">
+                    <i class="fa-solid fa-utensils"></i>
+                    <span>1. Donor (Restaurant)</span>
+                    <span id="badge-donor-count"
+                        class="hidden text-[10px] bg-white/20 px-1.5 py-0.5 rounded-full">0</span>
+                </button>
+
+                <button onclick="switchRole('shelter')" id="tab-shelter"
+                    class="role-tab flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition whitespace-nowrap">
+                    <i class="fa-solid fa-map-location-dot"></i>
+                    <span>2. Shelter Discovery</span>
+                    <span id="badge-avail-batches"
+                        class="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded-full border border-emerald-500/40">3</span>
+                </button>
+
+                <button onclick="switchRole('driver')" id="tab-driver"
+                    class="role-tab flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition whitespace-nowrap">
+                    <i class="fa-solid fa-motorcycle"></i>
+                    <span>3. Driver Dispatch</span>
+                    <span id="badge-driver-alert"
+                        class="hidden text-[10px] bg-amber-500 text-black font-bold px-1.5 py-0.5 rounded-full animate-pulse">1</span>
+                </button>
+
+                <button onclick="switchRole('handshake')" id="tab-handshake"
+                    class="role-tab flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition whitespace-nowrap">
+                    <i class="fa-solid fa-qrcode"></i>
+                    <span>4. QR Handshake</span>
+                </button>
+
+                <button onclick="switchRole('admin')" id="tab-admin"
+                    class="role-tab flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition whitespace-nowrap">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>5. Admin Hub</span>
+                </button>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- ================= NOTIFICATION TOAST CONTAINER ================= -->
+    <div id="toast-container"
+        class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
+
+    <!-- ================= MAIN WORKSPACE AREA ================= -->
+    <main class="flex-1 flex justify-center p-3 sm:p-6 lg:p-8 bg-slate-950">
+        <div id="viewport-frame" class="w-full max-w-7xl transition-all duration-300">
+
+            <!-- ================= PORTAL 1: DONOR (RESTAUARANT / COMMERCIAL KITCHEN) ================= -->
+            <section id="portal-donor" class="role-view">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                    <!-- Left: 2-Minute Surplus Listing Form -->
+                    <div class="lg:col-span-7 bg-white rounded-2xl shadow-xl border border-slate-200 p-5 sm:p-7">
+                        <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span
+                                        class="text-xs font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">Rakesh's
+                                        Kitchen</span>
+                                    <span class="text-xs text-slate-400">• The Spice Route, Kothrud</span>
+                                </div>
+                                <h2 class="text-xl sm:text-2xl font-bold text-slate-900 mt-1">Post End-of-Day Surplus
+                                </h2>
+                                <p class="text-xs sm:text-sm text-slate-500">Quick 2-minute dispatch form for hot & cold
+                                    excess food.</p>
+                            </div>
+                            <div
+                                class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl font-bold">
+                                <i class="fa-solid fa-bolt"></i>
+                            </div>
+                        </div>
+
+                        <form id="surplus-form" onsubmit="handleDonorSubmit(event)" class="space-y-5">
+
+                            <!-- Item Title & Food Tag (Human vs Animal) -->
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Item
+                                    Name / Contents</label>
+                                <input type="text" id="donor-food-name" required
+                                    placeholder="e.g. Steamed Rice, Dal Tadka & Paneer Gravy"
+                                    value="Basmati Veg Biryani & Mixed Raita"
+                                    class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm transition">
+                            </div>
+
+                            <!-- Safety Classification Toggle -->
+                            <div>
+                                <label
+                                    class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">AEIOU
+                                    Grade Certification</label>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <label
+                                        class="relative flex flex-col p-4 border-2 rounded-xl cursor-pointer transition border-emerald-500 bg-emerald-50/60"
+                                        id="grade-human-label">
+                                        <input type="radio" name="foodGrade" value="Human-Grade" checked
+                                            onchange="handleGradeChange('Human-Grade')" class="sr-only">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <span class="text-sm font-bold text-emerald-900 flex items-center gap-1.5">
+                                                <i class="fa-solid fa-shield-heart text-emerald-600"></i> Human-Grade
+                                            </span>
+                                            <i class="fa-solid fa-circle-check text-emerald-600"
+                                                id="grade-human-icon"></i>
+                                        </div>
+                                        <span class="text-[11px] text-emerald-700 leading-tight">Freshly prepared,
+                                            untouched excess intended for human shelters & orphanages.</span>
+                                    </label>
+
+                                    <label
+                                        class="relative flex flex-col p-4 border-2 rounded-xl cursor-pointer transition border-slate-200 hover:border-slate-300 bg-white"
+                                        id="grade-animal-label">
+                                        <input type="radio" name="foodGrade" value="Animal-Safe"
+                                            onchange="handleGradeChange('Animal-Safe')" class="sr-only">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <span class="text-sm font-bold text-slate-700 flex items-center gap-1.5">
+                                                <i class="fa-solid fa-paw text-amber-500"></i> Animal-Safe
+                                            </span>
+                                            <i class="fa-regular fa-circle text-slate-300" id="grade-animal-icon"></i>
+                                        </div>
+                                        <span class="text-[11px] text-slate-500 leading-tight">Scraps, broths, and
+                                            non-spicy leftovers fit for stray & dog shelters.</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Quantity & Estimated Meals -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label
+                                        class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Weight
+                                        / Quantity</label>
+                                    <div class="relative">
+                                        <input type="number" id="donor-qty" required min="1" max="500" value="18"
+                                            class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-mono font-bold">
+                                        <span
+                                            class="absolute right-3 top-3 text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded">KG</span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label
+                                        class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Estimated
+                                        Feed Impact</label>
+                                    <div class="relative">
+                                        <input type="number" id="donor-meals" required min="1" value="45"
+                                            class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-mono font-bold">
+                                        <span
+                                            class="absolute right-3 top-3 text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded">MEALS</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Packaging Type & Safe-by Deadline -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label
+                                        class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Packaging
+                                        Type</label>
+                                    <select id="donor-packaging"
+                                        class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none text-sm bg-white">
+                                        <option value="Sealed Aluminum Foil Trays">Sealed Aluminum Foil Trays</option>
+                                        <option value="Food-Grade Insulated Buckets">Food-Grade Insulated Buckets
+                                        </option>
+                                        <option value="Thermal Stackable Crates">Thermal Stackable Crates</option>
+                                        <option value="Zip-lock Airtight Containers">Zip-lock Airtight Containers
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label
+                                        class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Safe-by
+                                        Expiry Window</label>
+                                    <select id="donor-expiry"
+                                        class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none text-sm bg-white font-mono font-medium">
+                                        <option value="45">45 Minutes (Critical / Hot Cooked)</option>
+                                        <option value="90" selected>90 Minutes (Standard Warm Food)</option>
+                                        <option value="180">3 Hours (Chilled / Packaged Dairy)</option>
+                                        <option value="360">6 Hours (Bakery / Dry Goods)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Photo Snapshot Preview Simulation -->
+                            <div>
+                                <label
+                                    class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Verification
+                                    Photo (Kitchen Timestamp)</label>
+                                <div
+                                    class="border-2 border-dashed border-slate-300 rounded-xl p-3 flex items-center justify-between bg-slate-50">
+                                    <div class="flex items-center gap-3">
+                                        <img id="donor-img-preview"
+                                            src="https://images.unsplash.com/photo-1589302168068-964664d93dc0?auto=format&fit=crop&w=300&q=80"
+                                            alt="Biryani"
+                                            class="w-14 h-14 object-cover rounded-lg border border-slate-200">
+                                        <div>
+                                            <p class="text-xs font-bold text-slate-800">IMG_KITCHEN_2209.JPG</p>
+                                            <p class="text-[11px] text-emerald-600 flex items-center gap-1 font-medium">
+                                                <i class="fa-solid fa-circle-check"></i> Quality Verified • Fresh Seal
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <button type="button" onclick="cycleFoodImage()"
+                                        class="text-xs font-semibold px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 rounded-lg text-slate-700 transition">
+                                        <i class="fa-solid fa-camera mr-1"></i> Retake
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <button type="submit"
+                                class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-base shadow-lg shadow-emerald-600/30 transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-paper-plane"></i>
+                                <span>Publish Batch & Alert Nearby Shelters</span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Right: Live Active Listings by this Donor & Impact Preview -->
+                    <div class="lg:col-span-5 space-y-6">
+
+                        <!-- Quick Donor Statistics -->
+                        <div
+                            class="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-6 text-white border border-slate-700 shadow-xl">
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Restaurant
+                                    Tax Impact & CSR</span>
+                                <span
+                                    class="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-mono">Sec
+                                    80G Compliant</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="p-3 bg-slate-800/80 rounded-xl border border-slate-700">
+                                    <p class="text-2xl font-bold font-mono text-emerald-400" id="donor-stat-rescued">240
+                                        kg</p>
+                                    <p class="text-xs text-slate-400 mt-0.5">Surplus Donated (This Mo.)</p>
+                                </div>
+                                <div class="p-3 bg-slate-800/80 rounded-xl border border-slate-700">
+                                    <p class="text-2xl font-bold font-mono text-teal-300" id="donor-stat-receipts">14
+                                    </p>
+                                    <p class="text-xs text-slate-400 mt-0.5">Tax Receipts Issued</p>
+                                </div>
+                            </div>
+                            <div
+                                class="mt-4 pt-4 border-t border-slate-700/60 flex items-center justify-between text-xs text-slate-300">
+                                <span>Avg. Shelter Pickup Time:</span>
+                                <span class="font-bold text-white font-mono">22.4 mins</span>
+                            </div>
+                        </div>
+
+                        <!-- Active Listings Feed from this Donor -->
+                        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-lg">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="font-bold text-slate-900 text-sm">Active Kitchen Listings</h3>
+                                <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-medium"
+                                    id="donor-active-count">1 Active</span>
+                            </div>
+
+                            <div id="donor-listings-container" class="space-y-3">
+                                <!-- Injected via JavaScript -->
+                            </div>
+                        </div>
+
+                        <!-- AEIOU Sheet 2: Context Guide Card -->
+                        <div class="bg-amber-50/70 border border-amber-200 rounded-2xl p-4 text-xs text-amber-900">
+                            <div class="flex items-center gap-2 font-bold mb-1 text-amber-800">
+                                <i class="fa-solid fa-lightbulb"></i> Kitchen Closing Time Workflow
+                            </div>
+                            <p>Staff have wet hands and minimal time at 11:00 PM. Once submitted, the matching engine
+                                instantly holds batch exclusivity for registered NGOs within a 4.5km radius.</p>
+                        </div>
+
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- ================= PORTAL 2: SHELTER DISCOVERY & CLAIM ================= -->
+            <section id="portal-shelter" class="role-view hidden">
+                <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+
+                    <!-- Filter Header Bar -->
+                    <div
+                        class="p-4 sm:p-5 border-b border-slate-200 bg-slate-50 flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span
+                                    class="text-xs font-bold text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full">Sunita's
+                                    Night Shelter</span>
+                                <span class="text-xs text-slate-500">• Deccan Gymkhana, Pune</span>
+                            </div>
+                            <h2 class="text-xl font-bold text-slate-900 mt-1">Live Proximity Feed</h2>
+                        </div>
+
+                        <!-- Filter Controls -->
+                        <div class="flex flex-wrap items-center gap-2">
+                            <div class="inline-flex rounded-xl bg-white p-1 border border-slate-200 shadow-sm text-xs">
+                                <button onclick="setShelterFilter('all')" id="filter-all"
+                                    class="shelter-filter-btn px-3 py-1.5 rounded-lg font-bold bg-slate-900 text-white transition">All
+                                    Nearby</button>
+                                <button onclick="setShelterFilter('Human-Grade')" id="filter-human"
+                                    class="shelter-filter-btn px-3 py-1.5 rounded-lg font-bold text-slate-600 hover:text-slate-900 transition">Human-Grade</button>
+                                <button onclick="setShelterFilter('Animal-Safe')" id="filter-animal"
+                                    class="shelter-filter-btn px-3 py-1.5 rounded-lg font-bold text-slate-600 hover:text-slate-900 transition">Animal-Safe</button>
+                            </div>
+
+                            <select id="distance-filter" onchange="applyShelterFilters()"
+                                class="text-xs font-semibold px-3 py-2 bg-white border border-slate-200 rounded-xl outline-none shadow-sm text-slate-700">
+                                <option value="10">Within 10 km</option>
+                                <option value="5" selected>Within 5 km</option>
+                                <option value="2">Within 2 km</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Proximity Map Simulation + Cards Grid -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 min-h-[580px]">
+
+                        <!-- Left: Interactive Vector Map Canvas -->
+                        <div
+                            class="lg:col-span-7 bg-slate-900 relative overflow-hidden flex flex-col justify-between p-4 border-b lg:border-b-0 lg:border-r border-slate-800">
+
+                            <!-- Map Top Overlay: Real-time Radar Indicator -->
+                            <div class="z-10 flex items-center justify-between text-xs text-white">
+                                <div
+                                    class="bg-slate-950/80 backdrop-blur px-3 py-1.5 rounded-lg border border-slate-700/80 flex items-center gap-2 font-mono">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                                    <span>GPS RADAR: 18.5204° N, 73.8567° E</span>
+                                </div>
+                                <div
+                                    class="bg-slate-950/80 backdrop-blur px-3 py-1.5 rounded-lg border border-slate-700/80 text-[11px] text-slate-300">
+                                    <i class="fa-solid fa-arrows-rotate mr-1 text-emerald-400"></i> Syncing 1s
+                                </div>
+                            </div>
+
+                            <!-- Stylized Simulated Map Visual with Roads & Pins -->
+                            <div
+                                class="absolute inset-0 flex items-center justify-center opacity-40 pointer-events-none">
+                                <!-- Abstract Street Grid Lines -->
+                                <svg class="w-full h-full stroke-slate-700/50" viewBox="0 0 600 600" fill="none">
+                                    <path d="M0,150 Q300,200 600,100" stroke-width="6" />
+                                    <path d="M50,0 Q180,300 120,600" stroke-width="8" />
+                                    <path d="M480,0 Q400,250 550,600" stroke-width="7" />
+                                    <path d="M0,450 C200,420 380,500 600,480" stroke-width="10" />
+                                    <path d="M100,220 L520,380" stroke-width="4" stroke-dasharray="8 8" />
+                                    <circle cx="300" cy="300" r="180" stroke-width="1.5"
+                                        class="stroke-emerald-500/30" />
+                                    <circle cx="300" cy="300" r="260" stroke-width="1" class="stroke-emerald-500/20" />
+                                </svg>
+                            </div>
+
+                            <!-- Map Marker Pins Container -->
+                            <div id="map-pins-container" class="relative z-10 w-full h-[400px]">
+                                <!-- Interactive Markers Placed via JS -->
+                            </div>
+
+                            <!-- Map Legend Overlay -->
+                            <div
+                                class="z-10 bg-slate-950/85 backdrop-blur border border-slate-800 rounded-xl p-3 flex items-center justify-between text-xs text-slate-300">
+                                <div class="flex items-center gap-4">
+                                    <span class="flex items-center gap-1.5"><span
+                                            class="w-3 h-3 rounded-full bg-emerald-500"></span> Human-Grade</span>
+                                    <span class="flex items-center gap-1.5"><span
+                                            class="w-3 h-3 rounded-full bg-amber-500"></span> Animal-Safe</span>
+                                    <span class="flex items-center gap-1.5"><span
+                                            class="w-3 h-3 rounded-full bg-blue-500"></span> Your Shelter</span>
+                                </div>
+                                <span class="text-[11px] text-slate-400 hidden sm:inline">Click pin to inspect</span>
+                            </div>
+
+                        </div>
+
+                        <!-- Right: Available Batches Feed with Safe-By Countdown Bar -->
+                        <div
+                            class="lg:col-span-5 bg-slate-50 p-4 sm:p-5 flex flex-col justify-between overflow-y-auto max-h-[640px]">
+                            <div>
+                                <div class="flex items-center justify-between mb-3">
+                                    <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Nearby
+                                        Listings</h3>
+                                    <span id="shelter-feed-count"
+                                        class="text-xs bg-slate-200 text-slate-700 font-bold px-2 py-0.5 rounded-full">3
+                                        Batches</span>
+                                </div>
+
+                                <!-- Feed list container -->
+                                <div id="shelter-batch-list" class="space-y-3.5">
+                                    <!-- Dynamic cards injected via JS -->
+                                </div>
+                            </div>
+
+                            <!-- Bottom Note -->
+                            <div
+                                class="mt-4 pt-3 border-t border-slate-200 text-[11px] text-slate-500 flex items-center gap-1.5">
+                                <i class="fa-solid fa-lock text-slate-400"></i>
+                                <span>Claiming immediately locks the batch in the database, preventing
+                                    double-claims.</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- ================= PORTAL 3: DRIVER DISPATCH & TRANSIT ================= -->
+            <section id="portal-driver" class="role-view hidden">
+                <div class="max-w-2xl mx-auto space-y-5">
+
+                    <!-- Driver Status Card -->
+                    <div
+                        class="bg-slate-900 text-white rounded-2xl p-4 sm:p-5 border border-slate-800 shadow-xl flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="relative">
+                                <div
+                                    class="w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-xl text-emerald-400">
+                                    <i class="fa-solid fa-helmet-safety"></i>
+                                </div>
+                                <span
+                                    class="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-slate-900 rounded-full"></span>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="font-bold text-sm sm:text-base">Arjun (Partner #842)</h3>
+                                    <span
+                                        class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-300 font-mono">Honda
+                                        Activa • MH12-EF-3211</span>
+                                </div>
+                                <p class="text-xs text-slate-400">Equipped with Thermal Insulated Backpack (Hot/Cold
+                                    Split)</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs text-slate-400">Today's Earnings</span>
+                            <p class="text-lg font-bold text-emerald-400 font-mono" id="driver-wallet-balance">₹425.00
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Driver Active Dispatch Container -->
+                    <div id="driver-order-card"
+                        class="bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden transition-all duration-300">
+                        <!-- Populated via JS based on driver order state -->
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- ================= PORTAL 4: SHELTER QR SCANNER & HANDSHAKE ================= -->
+            <section id="portal-handshake" class="role-view hidden">
+                <div class="max-w-xl mx-auto bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden">
+
+                    <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                        <div>
+                            <span
+                                class="text-xs font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">Drop-off
+                                Verification</span>
+                            <h2 class="text-xl font-bold text-slate-900 mt-1">Shelter QR Handshake</h2>
+                        </div>
+                        <div class="w-10 h-10 rounded-xl bg-slate-200 text-slate-700 flex items-center justify-center">
+                            <i class="fa-solid fa-qrcode text-lg"></i>
+                        </div>
+                    </div>
+
+                    <div class="p-6">
+
+                        <!-- Camera Viewfinder Mock -->
+                        <div
+                            class="relative bg-slate-950 rounded-2xl overflow-hidden aspect-square max-w-xs mx-auto border-4 border-slate-800 shadow-inner flex flex-col items-center justify-center p-6 text-center">
+
+                            <!-- Corner brackets -->
+                            <div
+                                class="absolute top-4 left-4 w-8 h-8 border-t-4 border-l-4 border-emerald-400 rounded-tl">
+                            </div>
+                            <div
+                                class="absolute top-4 right-4 w-8 h-8 border-t-4 border-r-4 border-emerald-400 rounded-tr">
+                            </div>
+                            <div
+                                class="absolute bottom-4 left-4 w-8 h-8 border-b-4 border-l-4 border-emerald-400 rounded-bl">
+                            </div>
+                            <div
+                                class="absolute bottom-4 right-4 w-8 h-8 border-b-4 border-r-4 border-emerald-400 rounded-br">
+                            </div>
+
+                            <!-- Red/Emerald Scanner Line -->
+                            <div
+                                class="absolute left-4 right-4 h-0.5 bg-gradient-to-r from-transparent via-emerald-400 to-transparent scanner-laser shadow-[0_0_12px_#34d399]">
+                            </div>
+
+                            <!-- Center Graphic (Driver QR or Scanning Target) -->
+                            <div id="scanner-visual" class="flex flex-col items-center">
+                                <div
+                                    class="w-40 h-40 bg-white p-3 rounded-xl shadow-lg flex items-center justify-center mb-3">
+                                    <div
+                                        class="w-full h-full border-2 border-slate-800 border-dashed rounded flex flex-col items-center justify-center text-slate-700">
+                                        <i class="fa-solid fa-qrcode text-6xl text-slate-900"></i>
+                                        <span class="text-[9px] font-mono font-bold mt-1 tracking-wider text-slate-600"
+                                            id="qr-token-label">TOKEN-482-SEC</span>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-slate-300 font-medium">Align Driver Handover QR Code inside
+                                    viewfinder</p>
+                            </div>
+
+                        </div>
+
+                        <!-- Handshake Action Trigger -->
+                        <div class="mt-6 space-y-3">
+                            <button onclick="executeQRVerification()" id="btn-simulate-scan"
+                                class="w-full py-3.5 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-lg shadow-emerald-600/30 transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-barcode"></i>
+                                <span>Simulate Camera QR Scan & Confirm Food Receipt</span>
+                            </button>
+
+                            <button onclick="reportDisputeModal()"
+                                class="w-full py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 font-semibold text-xs transition flex items-center justify-center gap-1.5 border border-slate-200">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                                <span>Report Contamination or Broken Seal</span>
+                            </button>
+                        </div>
+
+                        <!-- Post Handshake Success Container (Hidden initially) -->
+                        <div id="handshake-receipt-card"
+                            class="hidden mt-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200">
+                            <div class="flex items-center gap-2 text-emerald-800 font-bold text-sm mb-2">
+                                <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                                <span>Handover Validated & Stored in Ledger</span>
+                            </div>
+                            <p class="text-xs text-emerald-700 mb-3">The driver's payout has been released, food logged
+                                into shelter inventory, and 80G tax receipt emailed to donor.</p>
+
+                            <div
+                                class="bg-white p-3 rounded-lg border border-emerald-100 text-[11px] font-mono space-y-1 text-slate-700">
+                                <div class="flex justify-between"><span>Batch ID:</span> <span class="font-bold"
+                                        id="rcpt-batch-id">#482</span></div>
+                                <div class="flex justify-between"><span>Driver Payout:</span> <span
+                                        class="font-bold text-emerald-600">+₹85.00 Release</span></div>
+                                <div class="flex justify-between"><span>Safe-window Margin:</span> <span
+                                        class="font-bold text-teal-600">38 mins remaining</span></div>
+                                <div class="flex justify-between"><span>Donor Tax Certificate:</span> <span
+                                        class="font-bold text-indigo-600">80G-CERT-2026-904</span></div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- ================= PORTAL 5: ADMIN OPERATIONS & ANALYTICS ================= -->
+            <section id="portal-admin" class="role-view hidden">
+                <div class="space-y-6">
+
+                    <!-- Top Row KPI Cards -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <div class="flex items-center justify-between text-slate-400 mb-2">
+                                <span class="text-xs font-bold uppercase tracking-wider">Total Food Rescued</span>
+                                <i class="fa-solid fa-weight-hanging text-emerald-500"></i>
+                            </div>
+                            <div class="text-2xl sm:text-3xl font-extrabold text-slate-900 font-mono"
+                                id="admin-kpi-rescued">1,438 kg</div>
+                            <div class="mt-1 text-xs text-emerald-600 font-semibold flex items-center gap-1">
+                                <i class="fa-solid fa-arrow-trend-up"></i> +18 kg in this simulation
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <div class="flex items-center justify-between text-slate-400 mb-2">
+                                <span class="text-xs font-bold uppercase tracking-wider">Meals Provided</span>
+                                <i class="fa-solid fa-bowl-food text-teal-500"></i>
+                            </div>
+                            <div class="text-2xl sm:text-3xl font-extrabold text-slate-900 font-mono"
+                                id="admin-kpi-meals">3,595</div>
+                            <div class="mt-1 text-xs text-slate-500">Human & animal beneficiaries</div>
+                        </div>
+
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <div class="flex items-center justify-between text-slate-400 mb-2">
+                                <span class="text-xs font-bold uppercase tracking-wider">Spoilage Rate</span>
+                                <i class="fa-solid fa-shield-virus text-indigo-500"></i>
+                            </div>
+                            <div class="text-2xl sm:text-3xl font-extrabold text-emerald-600 font-mono">0.42%</div>
+                            <div class="mt-1 text-xs text-emerald-600 font-semibold">Strict < 0.8% SLA Target</div>
+                            </div>
+
+                            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                                <div class="flex items-center justify-between text-slate-400 mb-2">
+                                    <span class="text-xs font-bold uppercase tracking-wider">Avg. Dispatch to
+                                        Door</span>
+                                    <i class="fa-solid fa-stopwatch text-amber-500"></i>
+                                </div>
+                                <div class="text-2xl sm:text-3xl font-extrabold text-slate-900 font-mono">24.2 m</div>
+                                <div class="mt-1 text-xs text-slate-500">Dynamic routing engine</div>
+                            </div>
+
+                        </div>
+
+                        <!-- Operational Tables & Live Activity Swimlane -->
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                            <!-- Real-time Order Audit Trail (SRS Swimlane) -->
+                            <div
+                                class="lg:col-span-8 bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6">
+                                <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
+                                    <div>
+                                        <h3 class="font-bold text-slate-900 text-base">Live Order Dispatch Audit Trail
+                                        </h3>
+                                        <p class="text-xs text-slate-500">Traceable state machine matching the UML
+                                            Sequence Diagram.</p>
+                                    </div>
+                                    <span
+                                        class="text-xs font-mono bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full font-bold">Auto-Updating</span>
+                                </div>
+
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-left border-collapse text-xs">
+                                        <thead>
+                                            <tr
+                                                class="border-b border-slate-200 text-slate-400 font-semibold uppercase tracking-wider">
+                                                <th class="py-2.5 px-3">Batch ID</th>
+                                                <th class="py-2.5 px-3">Category</th>
+                                                <th class="py-2.5 px-3">Donor / Pickup</th>
+                                                <th class="py-2.5 px-3">Shelter / Drop</th>
+                                                <th class="py-2.5 px-3">Driver</th>
+                                                <th class="py-2.5 px-3">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="admin-table-body"
+                                            class="divide-y divide-slate-100 font-medium text-slate-700">
+                                            <!-- Dynamic Rows Injected -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- System Verification & Pending Accounts -->
+                            <div class="lg:col-span-4 space-y-5">
+
+                                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                                    <h4 class="font-bold text-slate-900 text-sm mb-3 flex items-center justify-between">
+                                        <span>Pending Partner Verifications</span>
+                                        <span
+                                            class="text-xs bg-amber-100 text-amber-700 font-bold px-2 py-0.5 rounded-full">2
+                                            Pending</span>
+                                    </h4>
+
+                                    <div class="space-y-3">
+                                        <div
+                                            class="p-3 bg-slate-50 rounded-xl border border-slate-200/80 flex items-center justify-between text-xs">
+                                            <div>
+                                                <p class="font-bold text-slate-800">Taj Vivanta Baner</p>
+                                                <p class="text-slate-400 text-[11px]">Commercial Kitchen • FSSAI Lic
+                                                    #9822</p>
+                                            </div>
+                                            <button onclick="verifyPartner(this, 'Taj Vivanta')"
+                                                class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold text-[11px]">Approve</button>
+                                        </div>
+
+                                        <div
+                                            class="p-3 bg-slate-50 rounded-xl border border-slate-200/80 flex items-center justify-between text-xs">
+                                            <div>
+                                                <p class="font-bold text-slate-800">AASRA Animal Care</p>
+                                                <p class="text-slate-400 text-[11px]">Rescue Shelter • Reg NGO #401</p>
+                                            </div>
+                                            <button onclick="verifyPartner(this, 'AASRA Care')"
+                                                class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold text-[11px]">Approve</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- CSR & Environmental Metric -->
+                                <div
+                                    class="bg-gradient-to-br from-emerald-950 to-slate-900 text-white p-5 rounded-2xl border border-emerald-900/60 shadow-md">
+                                    <div
+                                        class="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wider mb-2">
+                                        <i class="fa-solid fa-leaf"></i> Carbon Offset Equivalent
+                                    </div>
+                                    <p class="text-2xl font-bold font-mono text-white">3,595 kg CO₂e</p>
+                                    <p class="text-xs text-slate-400 mt-1">Diverted from methane landfill emissions via
+                                        hyper-local direct distribution.</p>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- ================= GENERIC MODAL MESSAGE BOX ================= -->
+    <div id="app-modal"
+        class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div
+            class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 transform transition-all">
+            <div id="modal-icon-container"
+                class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl mb-4">
+                <i class="fa-solid fa-bell"></i>
+            </div>
+            <h3 id="modal-title" class="text-lg font-bold text-slate-900 mb-1">System Notification</h3>
+            <p id="modal-body" class="text-sm text-slate-600 mb-5 leading-relaxed">Notification content goes here.</p>
+            <div class="flex justify-end gap-2">
+                <button onclick="closeModal()"
+                    class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition">Dismiss</button>
+                <button id="modal-action-btn" onclick="closeModal()"
+                    class="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition">Acknowledge</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= EMBEDDED JAVASCRIPT STATE ENGINE ================= -->
+    <script>
+        /**
+         * Hyper-Local Food Surplus Hub (HLFSH)
+         * High-Fidelity Multi-Actor Interactive State Machine
+         */
+
+        // --- State Store ---
+        const APP_STATE = {
+            currentRole: 'donor',
+            activeFilter: 'all',
+            isMobileView: false,
+            driverWallet: 425.00,
+            totalRescuedKg: 1438,
+            totalMeals: 3595,
+            // Sample Food Images for quick mock toggles
+            foodImages: [
+                "https://images.unsplash.com/photo-1589302168068-964664d93dc0?auto=format&fit=crop&w=400&q=80",
+                "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=400&q=80",
+                "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=400&q=80",
+                "https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=400&q=80"
+            ],
+            currentImageIndex: 0,
+
+            // Central Data Repository of Food Batches
+            batches: [
+                {
+                    id: "BAT-482",
+                    title: "18 kg Basmati Biryani & Veg Curry",
+                    grade: "Human-Grade",
+                    donor: "The Spice Route",
+                    location: "Kothrud (1.8 km)",
+                    mapX: 25, // percentage for SVG map overlay
+                    mapY: 42,
+                    qtyKg: 18,
+                    meals: 45,
+                    packaging: "Sealed Aluminum Foil Trays",
+                    safeWindowMinutes: 84,
+                    status: "AVAILABLE", // AVAILABLE, CLAIMED, IN_TRANSIT, DELIVERED
+                    claimedBy: null,
+                    driverAssigned: null,
+                    dropoffTarget: "Sunita's Night Shelter",
+                    qrToken: "QR-SEC-482-PUN",
+                    imgUrl: "https://images.unsplash.com/photo-1589302168068-964664d93dc0?auto=format&fit=crop&w=400&q=80"
+                },
+                {
+                    id: "BAT-481",
+                    title: "25 kg Rice Broth & Boiled Meat Scraps",
+                    grade: "Animal-Safe",
+                    donor: "Golden Feast Caterers",
+                    location: "Shivaji Nagar (3.1 km)",
+                    mapX: 62,
+                    mapY: 28,
+                    qtyKg: 25,
+                    meals: 60,
+                    packaging: "Food-Grade Insulated Buckets",
+                    safeWindowMinutes: 140,
+                    status: "AVAILABLE",
+                    claimedBy: null,
+                    driverAssigned: null,
+                    dropoffTarget: "Imran's Stray Shelter",
+                    qrToken: "QR-SEC-481-ANI",
+                    imgUrl: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=400&q=80"
+                },
+                {
+                    id: "BAT-480",
+                    title: "12 kg Assorted Artisan Breads & Buns",
+                    grade: "Human-Grade",
+                    donor: "BakeCraft Patisserie",
+                    location: "FC Road (1.2 km)",
+                    mapX: 45,
+                    mapY: 65,
+                    qtyKg: 12,
+                    meals: 30,
+                    packaging: "Thermal Stackable Crates",
+                    safeWindowMinutes: 210,
+                    status: "AVAILABLE",
+                    claimedBy: null,
+                    driverAssigned: null,
+                    dropoffTarget: "Hope Child Foundation",
+                    qrToken: "QR-SEC-480-HUM",
+                    imgUrl: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80"
+                }
+            ],
+
+            // Driver's Active Order Pointer
+            activeDriverBatchId: null,
+            driverChecklist: {
+                sealIntact: false,
+                labelChecked: false,
+                bagSecured: false
+            }
+        };
+
+        // --- Role Navigation Switcher ---
+        function switchRole(roleKey) {
+            APP_STATE.currentRole = roleKey;
+
+            // Update UI Tabs
+            document.querySelectorAll('.role-tab').forEach(tab => {
+                tab.className = "role-tab flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition whitespace-nowrap";
+            });
+            const activeTab = document.getElementById(`tab-${roleKey}`);
+            if (activeTab) {
+                activeTab.className = "role-tab flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition whitespace-nowrap bg-emerald-600 text-white shadow-md shadow-emerald-900/30";
+            }
+
+            // Hide all portal views
+            document.querySelectorAll('.role-view').forEach(view => {
+                view.classList.add('hidden');
+            });
+
+            // Show selected portal view
+            const targetView = document.getElementById(`portal-${roleKey}`);
+            if (targetView) {
+                targetView.classList.remove('hidden');
+            }
+
+            // Refresh corresponding portal dynamic components
+            if (roleKey === 'donor') renderDonorView();
+            if (roleKey === 'shelter') renderShelterView();
+            if (roleKey === 'driver') renderDriverView();
+            if (roleKey === 'admin') renderAdminView();
+            if (roleKey === 'handshake') renderHandshakeView();
+        }
+
+        // --- Toast Notification Handler ---
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+
+            let bgStyle = 'bg-slate-900 border-slate-700 text-slate-100';
+            let icon = 'fa-info-circle text-blue-400';
+            if (type === 'success') {
+                bgStyle = 'bg-emerald-950/90 border-emerald-500/50 text-emerald-100';
+                icon = 'fa-circle-check text-emerald-400';
+            } else if (type === 'warn') {
+                bgStyle = 'bg-amber-950/90 border-amber-500/50 text-amber-100';
+                icon = 'fa-triangle-exclamation text-amber-400';
+            }
+
+            toast.className = `pointer-events-auto p-4 rounded-xl border shadow-xl flex items-center gap-3 text-xs font-semibold backdrop-blur-md transition-all duration-300 transform translate-y-2 opacity-0 ${bgStyle}`;
+            toast.innerHTML = `<i class="fa-solid ${icon} text-base flex-shrink-0"></i> <span>${message}</span>`;
+
+            container.appendChild(toast);
+
+            // Animate in
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            // Remove after 3.8s
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3800);
+        }
+
+        // --- Modal Box Helper (No alerts used) ---
+        function openModal(title, text, isAction = false, actionText = 'OK') {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-body').textContent = text;
+            document.getElementById('app-modal').classList.remove('hidden');
+        }
+        function closeModal() {
+            document.getElementById('app-modal').classList.add('hidden');
+        }
+
+        // --- Device Frame Switcher (Desktop Full width vs Mobile iPhone frame) ---
+        function toggleDeviceView() {
+            const frame = document.getElementById('viewport-frame');
+            const label = document.getElementById('deviceToggleLabel');
+            APP_STATE.isMobileView = !APP_STATE.isMobileView;
+
+            if (APP_STATE.isMobileView) {
+                frame.classList.remove('max-w-7xl');
+                frame.classList.add('max-w-md', 'border-x', 'border-slate-800', 'shadow-2xl', 'bg-slate-950/80', 'p-2', 'rounded-3xl');
+                label.textContent = "Full View";
+                showToast("Switched to Mobile Aspect Preview (393px width)", "info");
+            } else {
+                frame.classList.remove('max-w-md', 'border-x', 'border-slate-800', 'shadow-2xl', 'bg-slate-950/80', 'p-2', 'rounded-3xl');
+                frame.classList.add('max-w-7xl');
+                label.textContent = "Mobile Frame";
+                showToast("Switched to Wide Multi-Panel View", "info");
+            }
+        }
+
+        // --- DONOR PORTAL FUNCTIONS ---
+        function handleGradeChange(grade) {
+            const humanLabel = document.getElementById('grade-human-label');
+            const animalLabel = document.getElementById('grade-animal-label');
+            const humanIcon = document.getElementById('grade-human-icon');
+            const animalIcon = document.getElementById('grade-animal-icon');
+
+            if (grade === 'Human-Grade') {
+                humanLabel.className = "relative flex flex-col p-4 border-2 rounded-xl cursor-pointer transition border-emerald-500 bg-emerald-50/60";
+                animalLabel.className = "relative flex flex-col p-4 border-2 rounded-xl cursor-pointer transition border-slate-200 hover:border-slate-300 bg-white";
+                humanIcon.className = "fa-solid fa-circle-check text-emerald-600";
+                animalIcon.className = "fa-regular fa-circle text-slate-300";
+            } else {
+                animalLabel.className = "relative flex flex-col p-4 border-2 rounded-xl cursor-pointer transition border-amber-500 bg-amber-50/60";
+                humanLabel.className = "relative flex flex-col p-4 border-2 rounded-xl cursor-pointer transition border-slate-200 hover:border-slate-300 bg-white";
+                animalIcon.className = "fa-solid fa-circle-check text-amber-600";
+                humanIcon.className = "fa-regular fa-circle text-slate-300";
+            }
+        }
+
+        function cycleFoodImage() {
+            APP_STATE.currentImageIndex = (APP_STATE.currentImageIndex + 1) % APP_STATE.foodImages.length;
+            document.getElementById('donor-img-preview').src = APP_STATE.foodImages[APP_STATE.currentImageIndex];
+            showToast("Verification camera snapshot updated", "info");
+        }
+
+        function handleDonorSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('donor-food-name').value;
+            const qty = parseInt(document.getElementById('donor-qty').value, 10);
+            const meals = parseInt(document.getElementById('donor-meals').value, 10);
+            const packaging = document.getElementById('donor-packaging').value;
+            const expiry = parseInt(document.getElementById('donor-expiry').value, 10);
+            const grade = document.querySelector('input[name="foodGrade"]:checked').value;
+
+            const newBatchId = `BAT-${Math.floor(100 + Math.random() * 900)}`;
+
+            const newBatch = {
+                id: newBatchId,
+                title: `${qty} kg ${name}`,
+                grade: grade,
+                donor: "The Spice Route (Kothrud)",
+                location: "Kothrud (1.4 km)",
+                mapX: 20 + Math.floor(Math.random() * 50),
+                mapY: 25 + Math.floor(Math.random() * 45),
+                qtyKg: qty,
+                meals: meals,
+                packaging: packaging,
+                safeWindowMinutes: expiry,
+                status: "AVAILABLE",
+                claimedBy: null,
+                driverAssigned: null,
+                dropoffTarget: grade === "Human-Grade" ? "Sunita's Night Shelter" : "Paws & Tails Shelter",
+                qrToken: `QR-SEC-${newBatchId}`,
+                imgUrl: APP_STATE.foodImages[APP_STATE.currentImageIndex]
+            };
+
+            // Add to front of array
+            APP_STATE.batches.unshift(newBatch);
+
+            // Update platform metrics
+            APP_STATE.totalRescuedKg += qty;
+            APP_STATE.totalMeals += meals;
+
+            showToast(`Batch #${newBatchId} published! 4 local registered shelters pinged.`, 'success');
+
+            renderDonorView();
+            renderShelterView();
+            renderAdminView();
+
+            // Offer to switch to Shelter view
+            setTimeout(() => {
+                openModal(
+                    "Surplus Batch Broadcasted!",
+                    `Batch #${newBatchId} is now visible on the live proximity map. You can switch to the 'Shelter Discovery' tab to claim it or let the system simulate claiming.`
+                );
+            }, 400);
+        }
+
+        function renderDonorView() {
+            const container = document.getElementById('donor-listings-container');
+            const myBatches = APP_STATE.batches.filter(b => b.donor.includes("Spice Route"));
+            document.getElementById('donor-active-count').textContent = `${myBatches.length} Registered`;
+
+            if (myBatches.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 py-3 text-center">No active batches listed yet.</p>`;
+                return;
+            }
+
+            container.innerHTML = myBatches.map(b => {
+                const isHuman = b.grade === 'Human-Grade';
+                return `
+          <div class="p-3 rounded-xl border ${isHuman ? 'border-emerald-200 bg-emerald-50/40' : 'border-amber-200 bg-amber-50/40'} flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <img src="${b.imgUrl}" class="w-12 h-12 object-cover rounded-lg border border-slate-200">
+              <div>
+                <div class="flex items-center gap-1.5">
+                  <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${isHuman ? 'bg-emerald-600 text-white' : 'bg-amber-600 text-white'}">${b.grade}</span>
+                  <span class="text-xs font-bold text-slate-900">${b.id}</span>
+                </div>
+                <p class="text-xs text-slate-700 font-medium line-clamp-1">${b.title}</p>
+                <p class="text-[10px] text-slate-500 font-mono">Safe window: ${b.safeWindowMinutes}m left</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="text-[11px] font-bold px-2 py-0.5 rounded-full ${b.status === 'AVAILABLE' ? 'bg-blue-100 text-blue-700' : (b.status === 'DELIVERED' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700')}">
+                ${b.status}
+              </span>
+            </div>
+          </div>
+        `;
+            }).join('');
+        }
+
+        // --- SHELTER DISCOVERY & CLAIM FUNCTIONS ---
+        function setShelterFilter(grade) {
+            APP_STATE.activeFilter = grade;
+            document.querySelectorAll('.shelter-filter-btn').forEach(btn => {
+                btn.className = "shelter-filter-btn px-3 py-1.5 rounded-lg font-bold text-slate-600 hover:text-slate-900 transition";
+            });
+            if (grade === 'all') document.getElementById('filter-all').className = "shelter-filter-btn px-3 py-1.5 rounded-lg font-bold bg-slate-900 text-white transition";
+            if (grade === 'Human-Grade') document.getElementById('filter-human').className = "shelter-filter-btn px-3 py-1.5 rounded-lg font-bold bg-emerald-600 text-white transition";
+            if (grade === 'Animal-Safe') document.getElementById('filter-animal').className = "shelter-filter-btn px-3 py-1.5 rounded-lg font-bold bg-amber-600 text-white transition";
+
+            applyShelterFilters();
+        }
+
+        function applyShelterFilters() {
+            renderShelterView();
+        }
+
+        function renderShelterView() {
+            const feedContainer = document.getElementById('shelter-batch-list');
+            const pinsContainer = document.getElementById('map-pins-container');
+
+            // Filter list
+            let filtered = APP_STATE.batches.filter(b => {
+                if (APP_STATE.activeFilter !== 'all' && b.grade !== APP_STATE.activeFilter) return false;
+                return true;
+            });
+
+            document.getElementById('shelter-feed-count').textContent = `${filtered.length} Nearby`;
+            document.getElementById('badge-avail-batches').textContent = APP_STATE.batches.filter(b => b.status === 'AVAILABLE').length;
+
+            // Render Map Pins
+            pinsContainer.innerHTML = `
+        <!-- Shelter Central Base Pin -->
+        <div class="absolute" style="left: 48%; top: 48%;">
+          <div class="relative -translate-x-1/2 -translate-y-1/2 group cursor-pointer">
+            <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg border-2 border-white ring-4 ring-blue-500/30">
+              <i class="fa-solid fa-house-chimney text-sm"></i>
+            </div>
+            <div class="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap bg-slate-950 text-white text-[10px] px-2 py-0.5 rounded shadow">
+              Sunita's Shelter (You)
+            </div>
+          </div>
+        </div>
+      `;
+
+            // Append Food Pins
+            filtered.forEach(b => {
+                const isHuman = b.grade === 'Human-Grade';
+                const colorBg = isHuman ? 'bg-emerald-500' : 'bg-amber-500';
+                const pinIcon = isHuman ? 'fa-bowl-food' : 'fa-paw';
+
+                const pinElement = document.createElement('div');
+                pinElement.className = "absolute transition-all duration-300";
+                pinElement.style.left = `${b.mapX}%`;
+                pinElement.style.top = `${b.mapY}%`;
+                pinElement.innerHTML = `
+          <div onclick="highlightBatchCard('${b.id}')" class="relative -translate-x-1/2 -translate-y-1/2 group cursor-pointer">
+            <div class="w-9 h-9 rounded-full ${colorBg} text-white flex items-center justify-center shadow-lg border-2 border-white transform transition group-hover:scale-125">
+              <i class="fa-solid ${pinIcon} text-xs"></i>
+            </div>
+            <div class="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap bg-slate-900/90 text-white text-[9px] px-1.5 py-0.5 rounded font-mono">
+              ${b.qtyKg}kg • ${b.id}
+            </div>
+          </div>
+        `;
+                pinsContainer.appendChild(pinElement);
+            });
+
+            // Render Feed List
+            if (filtered.length === 0) {
+                feedContainer.innerHTML = `<div class="p-8 text-center text-slate-400 text-xs">No batches match current filter criteria.</div>`;
+                return;
+            }
+
+            feedContainer.innerHTML = filtered.map(b => {
+                const isHuman = b.grade === 'Human-Grade';
+                const isClaimed = b.status !== 'AVAILABLE';
+
+                return `
+          <div id="card-${b.id}" class="bg-white rounded-xl p-4 border ${isClaimed ? 'border-slate-200 opacity-60' : (isHuman ? 'border-emerald-200 hover:border-emerald-400' : 'border-amber-200 hover:border-amber-400')} shadow-sm transition">
+            <div class="flex items-start justify-between gap-3 mb-2">
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${isHuman ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                  ${b.grade}
+                </span>
+                <span class="text-xs font-mono font-bold text-slate-400">${b.id}</span>
+              </div>
+              <span class="text-[11px] font-mono font-semibold text-rose-600 flex items-center gap-1">
+                <i class="fa-regular fa-clock"></i> ${b.safeWindowMinutes}m left
+              </span>
+            </div>
+
+            <div class="flex gap-3 mb-3">
+              <img src="${b.imgUrl}" class="w-16 h-16 object-cover rounded-lg border border-slate-200 flex-shrink-0">
+              <div class="flex-1 min-w-0">
+                <h4 class="text-xs font-bold text-slate-900 truncate">${b.title}</h4>
+                <p class="text-[11px] text-slate-500 mt-0.5"><i class="fa-solid fa-store mr-1 text-slate-400"></i> ${b.donor}</p>
+                <p class="text-[11px] text-slate-500"><i class="fa-solid fa-box mr-1 text-slate-400"></i> ${b.packaging}</p>
+              </div>
+            </div>
+
+            <!-- Safe-Time Countdown Bar (AEIOU Specification) -->
+            <div class="mb-3">
+              <div class="flex justify-between text-[10px] font-mono text-slate-500 mb-1">
+                <span>Safe Shelf-Life Window</span>
+                <span class="font-bold text-emerald-600">Active</span>
+              </div>
+              <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                <div class="h-full ${isHuman ? 'bg-emerald-500' : 'bg-amber-500'} rounded-full transition-all" style="width: ${Math.min(100, (b.safeWindowMinutes / 120) * 100)}%"></div>
+              </div>
+            </div>
+
+            <!-- Action Button -->
+            <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+              <span class="text-xs font-bold text-slate-700">${b.location}</span>
+              ${isClaimed
+                        ? `<button disabled class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-500 font-bold text-xs cursor-not-allowed">
+                     <i class="fa-solid fa-lock mr-1"></i> Claimed & Locked
+                   </button>`
+                        : `<button onclick="claimSurplusBatch('${b.id}')" class="px-4 py-1.5 rounded-lg ${isHuman ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-amber-600 hover:bg-amber-700'} text-white font-bold text-xs shadow-md transition flex items-center gap-1.5">
+                     <i class="fa-solid fa-hand-holding-heart"></i>
+                     <span>Claim Batch</span>
+                   </button>`
+                    }
+            </div>
+          </div>
+        `;
+            }).join('');
+        }
+
+        function highlightBatchCard(batchId) {
+            const card = document.getElementById(`card-${batchId}`);
+            if (card) {
+                card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                card.classList.add('ring-2', 'ring-emerald-500');
+                setTimeout(() => card.classList.remove('ring-2', 'ring-emerald-500'), 1500);
+            }
+        }
+
+        function claimSurplusBatch(batchId) {
+            const batch = APP_STATE.batches.find(b => b.id === batchId);
+            if (!batch || batch.status !== 'AVAILABLE') return;
+
+            // Lock Batch to prevent double claiming (SRS 6.2 & UML Activity Diagram)
+            batch.status = "CLAIMED";
+            batch.claimedBy = "Sunita's Night Shelter";
+            APP_STATE.activeDriverBatchId = batch.id;
+
+            // Notify User
+            showToast(`Batch #${batch.id} claimed! System locked the item & alerting nearest driver.`, 'success');
+            document.getElementById('badge-driver-alert').classList.remove('hidden');
+
+            renderShelterView();
+            renderAdminView();
+
+            // Trigger Dispatch Sequence
+            setTimeout(() => {
+                openModal(
+                    "Shelter Batch Locked & Dispatched!",
+                    `The batch has been locked for your shelter. The dynamic routing engine has assigned Driver Arjun (1.2 km away with thermal insulated pack). Switch to 'Driver Dispatch' to view his route navigation!`,
+                    true
+                );
+            }, 500);
+        }
+
+        // --- DRIVER DISPATCH & TRANSIT FUNCTIONS ---
+        function renderDriverView() {
+            const container = document.getElementById('driver-order-card');
+            const activeBatch = APP_STATE.batches.find(b => b.id === APP_STATE.activeDriverBatchId);
+
+            if (!activeBatch || activeBatch.status === 'AVAILABLE') {
+                container.innerHTML = `
+          <div class="p-8 text-center text-slate-500">
+            <div class="w-14 h-14 mx-auto rounded-full bg-slate-100 flex items-center justify-center text-2xl text-slate-400 mb-3">
+              <i class="fa-solid fa-motorcycle"></i>
+            </div>
+            <h4 class="font-bold text-base text-slate-800">No Active Trips Assigned</h4>
+            <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">Standby in Pune Central Grid. When a shelter claims food, high-priority trip notifications appear here.</p>
+          </div>
+        `;
+                return;
+            }
+
+            // If Claimed, Driver sees Acceptance Card
+            if (activeBatch.status === 'CLAIMED') {
+                container.innerHTML = `
+          <div class="p-5 sm:p-6 bg-gradient-to-r from-emerald-900 to-slate-900 text-white flex items-center justify-between">
+            <div>
+              <span class="text-xs font-mono font-bold bg-amber-400 text-slate-950 px-2.5 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
+                New Dispatch Alert
+              </span>
+              <h3 class="text-xl font-bold mt-1">Pickup: ${activeBatch.donor}</h3>
+              <p class="text-xs text-slate-300">Drop-off: ${activeBatch.dropoffTarget}</p>
+            </div>
+            <div class="text-right">
+              <span class="text-xs text-slate-300">Guaranteed Trip Fee</span>
+              <div class="text-2xl sm:text-3xl font-extrabold text-emerald-400 font-mono">₹85.00</div>
+            </div>
+          </div>
+
+          <div class="p-5 sm:p-6 space-y-4">
+            <div class="flex items-center justify-between text-xs font-semibold text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-200">
+              <span><i class="fa-solid fa-route text-emerald-600 mr-1.5"></i> Total Distance: <strong>3.2 km</strong></span>
+              <span><i class="fa-solid fa-weight-scale text-emerald-600 mr-1.5"></i> Payload: <strong>${activeBatch.qtyKg} kg</strong></span>
+              <span><i class="fa-solid fa-temperature-half text-emerald-600 mr-1.5"></i> <strong>${activeBatch.grade}</strong></span>
+            </div>
+
+            <div class="border border-slate-200 rounded-xl p-3 flex items-center gap-3">
+              <img src="${activeBatch.imgUrl}" class="w-12 h-12 object-cover rounded-lg border">
+              <div>
+                <p class="text-xs font-bold text-slate-900">${activeBatch.title}</p>
+                <p class="text-[11px] text-slate-500">Packaging: ${activeBatch.packaging}</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 pt-2">
+              <button onclick="rejectDriverOrder()" class="py-3 px-4 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 font-bold text-xs transition">
+                Decline
+              </button>
+              <button onclick="acceptDriverOrder('${activeBatch.id}')" class="py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 transition flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-check"></i> Accept Trip (₹85)
+              </button>
+            </div>
+          </div>
+        `;
+                return;
+            }
+
+            // If IN_TRANSIT, Driver sees Navigation, Thermal Safety Timer & Checklist
+            if (activeBatch.status === 'IN_TRANSIT') {
+                container.innerHTML = `
+          <!-- Live Navigation Header -->
+          <div class="bg-slate-950 p-4 text-white flex items-center justify-between border-b border-slate-800">
+            <div class="flex items-center gap-2 text-xs">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+              <span class="font-bold font-mono">GPS TURN-BY-TURN ACTIVE</span>
+            </div>
+            <span class="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-mono">ETA: 8 mins</span>
+          </div>
+
+          <div class="p-5 sm:p-6 space-y-5">
+            
+            <!-- Safe-Time Transit Bar (AEIOU Requirement 5) -->
+            <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+              <div class="flex items-center justify-between text-xs font-bold text-emerald-900 mb-1">
+                <span><i class="fa-solid fa-temperature-arrow-down mr-1 text-emerald-600"></i> Thermal Bag Safe-Transit Bar</span>
+                <span class="font-mono text-emerald-700">38:40 Safe Window Left</span>
+              </div>
+              <div class="w-full bg-emerald-200/60 h-2.5 rounded-full overflow-hidden">
+                <div class="h-full bg-emerald-600 rounded-full w-4/5 animate-pulse"></div>
+              </div>
+              <p class="text-[11px] text-emerald-700 mt-2">Transit temperature maintained within 65°C - 70°C target boundary.</p>
+            </div>
+
+            <!-- Handover Quality Checklist (SRS 6.4) -->
+            <div class="space-y-2">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700">Driver Quality Checklist (Pickup Sign-off)</h4>
+              
+              <label class="flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer text-xs font-medium text-slate-800">
+                <input type="checkbox" id="chk-seal" checked class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500">
+                <span>Tamper-evident container seal checked & intact</span>
+              </label>
+
+              <label class="flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer text-xs font-medium text-slate-800">
+                <input type="checkbox" id="chk-label" checked class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500">
+                <span>Color tag verified (${activeBatch.grade === 'Human-Grade' ? 'Green Tag' : 'Orange Tag'})</span>
+              </label>
+
+              <label class="flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer text-xs font-medium text-slate-800">
+                <input type="checkbox" id="chk-bag" checked class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500">
+                <span>Loaded into insulated thermal backpack</span>
+              </label>
+            </div>
+
+            <!-- Dynamic One-Time QR Code Display -->
+            <div class="border-2 border-slate-900 rounded-xl p-4 bg-slate-900 text-white text-center">
+              <p class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Show this to Shelter Receiver</p>
+              
+              <div class="bg-white p-3 rounded-lg inline-block shadow-md">
+                <i class="fa-solid fa-qrcode text-7xl text-slate-950"></i>
+              </div>
+              
+              <div class="mt-2 text-xs font-mono font-bold text-emerald-400" id="driver-qr-string">
+                ${activeBatch.qrToken}
+              </div>
+              <p class="text-[11px] text-slate-400 mt-1">Shelter manager will scan this token to confirm receipt and credit your wallet.</p>
+            </div>
+
+            <button onclick="switchRole('handshake')" class="w-full py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition flex items-center justify-center gap-2">
+              <i class="fa-solid fa-camera"></i>
+              <span>Open Shelter Scanner to Complete Handshake</span>
+            </button>
+
+          </div>
+        `;
+                return;
+            }
+
+            // If Delivered
+            if (activeBatch.status === 'DELIVERED') {
+                container.innerHTML = `
+          <div class="p-8 text-center bg-white space-y-4">
+            <div class="w-16 h-16 mx-auto rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-3xl">
+              <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-slate-900">Trip Completed!</h3>
+              <p class="text-xs text-slate-500 mt-1">Food successfully dropped at ${activeBatch.dropoffTarget}.</p>
+            </div>
+            <div class="inline-block px-4 py-2 bg-emerald-50 rounded-xl border border-emerald-200 text-emerald-800 font-mono font-bold text-sm">
+              + ₹85.00 Transferred to Driver Wallet
+            </div>
+            <div>
+              <button onclick="resetTrip()" class="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition">
+                Return to Standby Mode
+              </button>
+            </div>
+          </div>
+        `;
+            }
+        }
+
+        function acceptDriverOrder(batchId) {
+            const batch = APP_STATE.batches.find(b => b.id === batchId);
+            if (!batch) return;
+
+            batch.status = 'IN_TRANSIT';
+            batch.driverAssigned = "Arjun (Activa)";
+            document.getElementById('badge-driver-alert').classList.add('hidden');
+
+            showToast("Order accepted! Turn-by-turn navigation started to donor kitchen.", "success");
+            renderDriverView();
+            renderAdminView();
+        }
+
+        function rejectDriverOrder() {
+            APP_STATE.activeDriverBatchId = null;
+            document.getElementById('badge-driver-alert').classList.add('hidden');
+            showToast("Order declined. Searching for next closest rider...", "warn");
+            renderDriverView();
+        }
+
+        function resetTrip() {
+            APP_STATE.activeDriverBatchId = null;
+            renderDriverView();
+        }
+
+        // --- SHELTER QR SCANNER & HANDSHAKE FUNCTIONS ---
+        function renderHandshakeView() {
+            const activeBatch = APP_STATE.batches.find(b => b.id === APP_STATE.activeDriverBatchId);
+            const tokenLabel = document.getElementById('qr-token-label');
+
+            if (activeBatch) {
+                tokenLabel.textContent = activeBatch.qrToken;
+            } else {
+                tokenLabel.textContent = "WAITING-FOR-ORDER";
+            }
+        }
+
+        function executeQRVerification() {
+            const activeBatch = APP_STATE.batches.find(b => b.id === APP_STATE.activeDriverBatchId);
+
+            if (!activeBatch || activeBatch.status !== 'IN_TRANSIT') {
+                openModal(
+                    "No Active In-Transit Batch",
+                    "There is no active delivery in transit right now. Please claim a batch in the 'Shelter Discovery' portal and accept it in the 'Driver Dispatch' portal first."
+                );
+                return;
+            }
+
+            // Mark Delivered
+            activeBatch.status = 'DELIVERED';
+            APP_STATE.driverWallet += 85.00;
+            document.getElementById('driver-wallet-balance').textContent = `₹${APP_STATE.driverWallet.toFixed(2)}`;
+
+            // Show Handshake Receipt Card
+            const receiptCard = document.getElementById('handshake-receipt-card');
+            receiptCard.classList.remove('hidden');
+            document.getElementById('rcpt-batch-id').textContent = activeBatch.id;
+
+            showToast("QR Verified! ₹85 released to driver wallet & tax receipt sent to donor.", "success");
+
+            renderDriverView();
+            renderAdminView();
+            renderDonorView();
+        }
+
+        function reportDisputeModal() {
+            openModal(
+                "Quality Seal Issue Flagged",
+                "A platform incident log has been opened. The batch has been marked for emergency supervisor review and the driver re-routed to avoid spoilage penalty."
+            );
+        }
+
+        // --- ADMIN DASHBOARD & AUDIT TRAIL FUNCTIONS ---
+        function renderAdminView() {
+            document.getElementById('admin-kpi-rescued').textContent = `${APP_STATE.totalRescuedKg} kg`;
+            document.getElementById('admin-kpi-meals').textContent = APP_STATE.totalMeals.toLocaleString();
+
+            const tableBody = document.getElementById('admin-table-body');
+            tableBody.innerHTML = APP_STATE.batches.map(b => {
+                const isHuman = b.grade === 'Human-Grade';
+                let statusBadge = `<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold text-[10px]">AVAILABLE</span>`;
+                if (b.status === 'CLAIMED') statusBadge = `<span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold text-[10px]">CLAIMED / LOCKED</span>`;
+                if (b.status === 'IN_TRANSIT') statusBadge = `<span class="bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-bold text-[10px]">IN TRANSIT</span>`;
+                if (b.status === 'DELIVERED') statusBadge = `<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold text-[10px]">DELIVERED & VERIFIED</span>`;
+
+                return `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="py-3 px-3 font-mono font-bold text-slate-900">${b.id}</td>
+            <td class="py-3 px-3">
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded ${isHuman ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
+                ${b.grade}
+              </span>
+            </td>
+            <td class="py-3 px-3">
+              <p class="font-bold text-slate-800">${b.donor}</p>
+              <p class="text-[10px] text-slate-400">${b.qtyKg} kg (${b.meals} meals)</p>
+            </td>
+            <td class="py-3 px-3 text-slate-700">${b.claimedBy || '<span class="text-slate-400 italic">Unclaimed</span>'}</td>
+            <td class="py-3 px-3 text-slate-700">${b.driverAssigned || '<span class="text-slate-400 italic">Pending</span>'}</td>
+            <td class="py-3 px-3">${statusBadge}</td>
+          </tr>
+        `;
+            }).join('');
+        }
+
+        function verifyPartner(button, name) {
+            button.disabled = true;
+            button.className = "px-2.5 py-1 bg-slate-200 text-slate-500 rounded font-bold text-[11px] cursor-not-allowed";
+            button.textContent = "Approved";
+            showToast(`${name} credentials verified & added to trusted network.`, 'success');
+        }
+
+        function resetDemoData() {
+            APP_STATE.activeDriverBatchId = null;
+            APP_STATE.batches.forEach((b, i) => {
+                b.status = 'AVAILABLE';
+                b.claimedBy = null;
+                b.driverAssigned = null;
+            });
+            document.getElementById('handshake-receipt-card').classList.add('hidden');
+            document.getElementById('badge-driver-alert').classList.add('hidden');
+            showToast("Simulation database reset to initial state.", "info");
+            switchRole(APP_STATE.currentRole);
+        }
+
+        // --- Window Initialization ---
+        window.onload = function () {
+            renderDonorView();
+            renderShelterView();
+            renderDriverView();
+            renderAdminView();
+        };
+    </script>
+</body>
+
+</html>
